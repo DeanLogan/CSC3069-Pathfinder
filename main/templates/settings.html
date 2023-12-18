@@ -1,0 +1,152 @@
+{% load static %}
+{% block content%}
+
+<!-- 
+    Author: @DeanLogan
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Pathfinder</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'assets/img/logo.png' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/styles.css' %}">
+</head>
+    <body>
+        <main>
+            <!-- This is for the sidebar/navigation, this will change depending on the access levels the user has. -->
+            <div class="sidebar" id="menu">
+                <div class="toggleButton">
+                    <p><span class="closebtn" onclick="navToggle()">&#9776;</span>&nbsp;&nbsp;Pathfinder</p>
+                </div>
+                <br />
+                <div id="menu-items">
+                    <a href="/" class="menu-item">Home</a>
+                    <a href="/ModuleInformation" class="menu-item">Module <br /> Information</a>
+                    <a href='https://www.qub.ac.uk/' target="_blank" class="menu-item">Queen's <br /> Website</a>
+                    <a href="/settings", target="_parent" class="menu-item">Settings</a>
+                    {% if user.is_authenticated and user.username == "admin" %} <!-- displays link to admin page if user is the admin -->
+                        <a href="/admin" class="menu-item">Admin Page</a>
+                    {% elif user.is_authenticated and user.username != "admin" %} <!-- displays link to grade dashboard page if user is the student -->
+                        <a href="/GradeDashboard" class="menu-item">Grade  <br /> Dashboard</a>
+                    {% else %} <!-- displays login and sign-up buttons if the user is not authenticated -->
+                        <a href="/login"class="menu-item">Login</a>
+                        <a class="menu-item" onclick="displaySignUpPage()">Sign-Up</a>
+                    {% endif %}
+                    {% if user.is_authenticated %} <!-- displays logout button if the user is authenticated -->
+                        <a onclick="logout()" class="menu-item">Logout</a>
+                    {% endif %}
+                </div>
+                <div id="menu-background-pattern"></div> <!-- this is for the dots that appear in the background of the side bar -->
+            </div>
+
+            <div class="content">
+                <div>
+                    <img src="{% static 'assets/img/pathfinder.png' %}" alt="logo" />
+                    <h1>Settings</h1>
+                </div>
+                <div>
+                    {% if user.is_authenticated %}
+                        <h2>Account Information</h2>
+                        <form class="" action="" method="">
+                            <p><b>Name:</b></p>
+                            <p class="accountInformation" id="account-name"></p>
+                            <p><b>Email:</b></p>
+                            <p class="accountInformation" id="account-email"></p>
+                            {% if user.is_authenticated and user.username != "admin" %}
+                                <p><b>Student Number:</b></p>
+                                <p class="accountInformation" id="account-student-number"></p>
+                                <p><b>Pathway:</b></p>
+                                <p class="accountInformation" id="account-pathway"></p>
+                                <p><b>Current Semester:</b></p>
+                                <p class="accountInformation" id="account-semester"></p>
+                                <p><b>Current Stage:</b></p>
+                                <p class="accountInformation" id="account-stage"></p>
+                            {% endif %}
+                            <p><b>2FA:</b></p>
+                            <p class="accountInformation">
+                                Scan the qr code below with your authenticator app, to setup 2FA on your account.
+                                <br /><br />
+                                <span id="qr-code"></span>
+                            </p>
+                            <br /><br />
+                            <p>If any of this information is incorrect please contact the admin here: <b><span class="admin-email"></span></b></p>
+                        </form>
+                    {% endif %}
+
+                    <h2>Accessability</h2>
+                    <form onsubmit="return updateAccessabilityOptions()">
+                        <label class="" for="theme"><b>Theme: </b></label>
+                        <input type="radio" id="dark" name="theme" value="dark-mode" checked="checked">
+                        <label for="dark">Dark</label>
+                        <input type="radio" id="light" name="theme" value="light-mode">
+                        <label for="light">Light</label>
+                        <input type="radio" id="highContrast" name="theme" value="high-contrast-mode">
+                        <label for="highContrast">High Contrast</label><br>
+                        
+                        <label><b>Font Size: </b></label>
+                        <input type="radio" id="small" name="fontSize" value="small">
+                        <label for="small">Small</label>
+                        <input type="radio" id="medium" name="fontSize" value="medium" checked="checked">
+                        <label for="medium">Medium</label>
+                        <input type="radio" id="large" name="fontSize" value="large">
+                        <label for="large">Large</label><br>
+                        <button type="submit">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <!-- Sign-up pop up -->
+        <div id="id02" class="modal"> <!-- the modal allows for the blurred background to appear around the "container" div -->
+            <form id="sign-up-1" class="modal-content animate" onsubmit="nextSignUpStep()">
+                <div class="container">
+                    <h2>Enter Account Information</h2><br />
+                    <p>All fields must be filled, then a request to the admin to create your account will be sent.</p><br /><br />
+                    <label for="student-number-sign-up"><b>Student Number</b></label>
+                    <input type="text" placeholder="Enter student number" name="student-number-sign-up" required>
+                    <label for="name"><b>Name</b></label>
+                    <input type="text" placeholder="Enter name" name="name" required>
+                    <label for="email"><b>Email</b></label>
+                    <input type="text" placeholder="Enter email" name="email" required>
+                    
+                    <label><b>Pathway</b></label><br />
+                    <!-- this is where the pathways will be added to once they are got from the database -->
+                    <div class="Pathway">
+                        <label for="BIT"><input type="radio" id="BIT" name="pathway" value="BIT" onchange="updateStageOptions()" checked="true"/> BIT</label> <!-- placeholder until the js populates this with the correct pathways -->
+                    </div>
+
+                    <label for="stage"><b>Stage</b></label><br />
+                    <label for="stage-1"><input type="radio" id="stage-1" name="stage" value="1"checked="true" /> 1</label>
+                    <label for="stage-2"><input type="radio" id="stage-2" name="stage" value="2" /> 2</label>
+                    <label for="stage-3"><input type="radio" id="stage-3" name="stage" value="3" /> 3</label>
+                    <label for="stage-4" class="stage-4"><input type="radio" id="stage-4" name="stage" value="4" /> 4</label>
+                    <br />
+
+                    <label><b>Semester</b></label><br />
+                    <label for="semester-1"><input type="radio" id="semester-1" name="semester" value="1" checked="true"/> 1</label>
+                    <label for="semester-2"><input type="radio" id="semester-2" name="semester" value="2" /> 2</label>
+
+                    <button onclick="goToSignUp()" type="button">Next</button>
+                    <button  onclick="document.getElementById('id02').style.display='none'">Cancel</button>
+                </div>
+            </form>
+
+            <div id="sign-up-2" class="modal-content animate">
+                <div>
+                    <h2>Sign Up Request Submitted!</h2><br /><br />
+                    <p>Your information has been sent to the admin <br /> Once the admin creates your, they'll send an email with your login details <br />If you have any questions please contact the admin here: <span id="admin-email"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="{% static 'assets/js/general.js' %}"></script>
+        <script src="{% static 'assets/js/settingsPage.js' %}"></script>
+    </body>
+</html>
+
+{% endblock %}
